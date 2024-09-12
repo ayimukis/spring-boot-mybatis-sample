@@ -2,8 +2,773 @@
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.example.demo.sample.UserMapper">
 
-    <select id="selectUsers" resultType="hashMap">
-        select * from user
+    <insert id="insertCmpnOcrn" parameterType="Map">
+        INSERT INTO CUSTOM.TAM_CMPN_OCRN
+        (
+          CMPN_MIN_SEQ
+        , EMP_SEQ
+        , OCRN_DIV
+        , OVTMWRK_APLY_DTL_SEQ
+        , OCRN_CMPN_MIN
+        , OCRN_CMPN_YMD
+        , USE_CMPN_MIN
+        , DEL_YN
+        , RGTR_SEQ
+        , REG_YMD
+        , MDF_SEQ
+        , MDF_YMD
+        )
+        VALUES
+            (
+              #{cmpnMinSeq}
+            , #{empSeq}
+            , #{ocrnDiv}
+            , #{ovtmwrkAplyDtlSeq}
+            , #{ocrnCmpnMin}
+            , #{ocrnCmpnYmd}
+            , 0
+            , 'N'
+            , 'SYSTEM'
+            , NOW()
+            , 'SYSTEM'
+            , NOW()
+            )
+    </insert>
+
+    <insert id="insertCmpnMst" parameterType="Map">
+        INSERT INTO CUSTOM.TAM_CMPN_MIN
+        (
+          EMP_SEQ
+        , OCRN_CMPN_MIN
+        , DEL_YN
+        , RGTR_SEQ
+        , REG_YMD
+        , MDF_SEQ
+        , MDF_YMD
+        )
+        VALUES
+            (
+              #{empSeq}
+            , #{ocrnCmpnMin}
+            , 'N'
+            , 'SYSTEM'
+            , NOW()
+            , 'SYSTEM'
+            , NOW()
+            )
+    </insert>
+    <insert id="insertAtt21" parameterType="Map">
+        insert into CUSTOM.TAM_AT_ATT_21
+        (
+        COMP_SEQ
+        ,DEPT_SEQ
+        ,EMP_SEQ
+        ,EMP_CD
+        ,GROUP_SEQ
+        ,GROUP_NM
+        ,DEPT_NAME
+        ,EMP_NAME
+        ,POSITION_NAME
+        ,DATE
+        ,COME_TM
+        ,LEAVE_TM
+        ,RCS_LIST
+        ,WORK_MIN
+        ,REAL_WORK_MIN
+        ,REMARK
+        ,RGTR_SEQ
+        ,REG_YMD
+        ,MDF_SEQ
+        ,MDF_YMD
+        )
+        values (
+        #{compSeq}
+        ,#{deptSeq}
+        ,#{empSeq}
+        ,#{erpEmpNum}
+        ,#{groupSeq}
+        ,#{groupNm}
+        ,#{deptName}
+        ,#{empName}
+        ,#{positionName}
+        ,#{date}
+        ,#{comeTm}
+        ,#{leaveTm}
+        ,#{rcsList}
+        ,#{workMin}
+        ,#{realWorkMin}
+        ,#{remark}
+        ,'SYSTEM'
+        ,NOW()
+        ,'SYSTEM'
+        ,NOW()
+        )
+
+    </insert>
+
+    <update id="updateAllw" parameterType="Map">
+        UPDATE CUSTOM.TAM_OVTMWRK_APLY_DTL
+        SET ALLW_OVTMWRK_MIN = #{allwOvtmwrkMin}
+          , ALLW_HLDY_WRK_MIN = #{allwHldyWrkMin}
+          , ALLW_HLDY_OVTMWRK_MIN = #{allwHldyOvtmwrkMin}
+          , ALLW_NGHT_MIN = #{allwNghtMin}
+          , ALLW_DAYHLDY_WRK_MIN = #{allwDayhldyWrkMin}
+          , ALLW_CAL_YN = 'Y'
+          , MDF_SEQ = #{loginEmpSeq}
+          , MDF_YMD = NOW()
+        WHERE OVTMWRK_APLY_DTL_SEQ = #{ovtmwrkAplyDtlSeq}
+    </update>
+
+    <update id="updateAllwWorkPlan" parameterType="Map">
+        UPDATE CUSTOM.TAM_WORK_PLAN
+        SET ALLW_OT_MIN = #{allwOvtmwrkMin}
+          , ALLW_OT_HLDY_MIN = #{allwHldyWrkMin}
+          , ALLW_OT_HLDYOVR_MIN = #{allwHldyOvtmwrkMin}
+          , ALLW_OT_NGHT_MIN = #{allwNghtMin}
+          , ALLW_CAL_YN = 'Y'
+          , MDF_SEQ = #{loginEmpSeq}
+          , MDF_YMD = NOW()
+        WHERE WORK_PLAN_SEQ = #{ovtmwrkAplyDtlSeq}
+    </update>
+
+    <update id="updateCmpnMst" parameterType="Map">
+        UPDATE CUSTOM.TAM_CMPN_MIN
+        SET OCRN_CMPN_MIN = #{ocrnCmpnMin}
+          , MDF_SEQ = 'SYSTEM'
+          , MDF_YMD = NOW()
+        WHERE CMPN_MIN_SEQ = #{cmpnMinSeq}
+          AND DEL_YN = 'N'
+    </update>
+
+    <update id="allwCncl" parameterType="Map">
+        UPDATE CUSTOM.TAM_OVTMWRK_APLY_DTL
+        SET ALLW_CAL_YN = 'N'
+          , MDF_SEQ = 'SYSTEM'
+          , ALLW_OVTMWRK_MIN = NULL
+          , ALLW_HLDY_WRK_MIN = NULL
+          , ALLW_HLDY_OVTMWRK_MIN = NULL
+          , ALLW_NGHT_MIN = NULL
+          , ALLW_DAYHLDY_WRK_MIN = NULL
+          , MDF_YMD = NOW()
+        WHERE OVTMWRK_APLY_DTL_SEQ = #{ovtmwrkAplyDtlSeq}
+    </update>
+
+    <update id="allwCnclWorkPlan" parameterType="Map">
+        UPDATE CUSTOM.TAM_WORK_PLAN
+        SET ALLW_CAL_YN = 'N'
+          , MDF_SEQ = 'SYSTEM'
+          , ALLW_OT_MIN = NULL
+          , ALLW_OT_HLDY_MIN = NULL
+          , ALLW_OT_HLDYOVR_MIN = NULL
+          , ALLW_OT_NGHT_MIN = NULL
+          , MDF_YMD = NOW()
+        WHERE WORK_PLAN_SEQ = #{ovtmwrkAplyDtlSeq}
+    </update>
+
+    <update id="delCmpnDtl" parameterType="Map">
+        UPDATE CUSTOM.TAM_CMPN_OCRN
+        SET DEL_YN = 'Y'
+          , MDF_SEQ = 'SYSTEM'
+          , MDF_YMD = NOW()
+        WHERE OVTMWRK_APLY_DTL_SEQ = #{ovtmwrkAplyDtlSeq}
+    </update>
+
+    <update id="delCmpnMst" parameterType="Map">
+        UPDATE CUSTOM.TAM_CMPN_MIN
+        SET DEL_YN = 'Y'
+          , MDF_SEQ = 'SYSTEM'
+          , MDF_YMD = NOW()
+        WHERE CMPN_MIN_SEQ = #{cmpnMinSeq}
+    </update>
+    <delete id="delAtt21" parameterType="Map">
+        delete from CUSTOM.TAM_AT_ATT_21
+    </delete>
+
+    <select id="selectUsers" resultType="com.example.demo.sample.VoMap">
+        select * from v_user_info
+    </select>
+
+    <select id="getRegList" resultType="com.example.demo.sample.VoMap">
+        SELECT *
+             , IF(B.WORK_GRUP_REG_DTL_RCS_SEQ IS NULL, '[]', CONCAT('[', GROUP_CONCAT(JSON_OBJECT('startDt', IFNULL(B.RCSBGN_DT, ''), 'startTm', IFNULL(B.RCSBGN_TM, ''),'endDt', IFNULL(B.RCSEND_DT, ''),'endTm', IFNULL(B.RCSEND_TM, ''),'brkMin', IFNULL(B.RCS_MIN, 0)) ORDER BY CONCAT(B.RCSBGN_DT,B.RCSBGN_TM,'00')), ']')) AS RCS_JSON
+             , (SELECT EMP_NAME FROM V_USER_INFO WHERE EMP_SEQ = A.EMP_SEQ AND MAIN_COMP_YN = 'Y' AND MAIN_DEPT_YN = 'Y' AND USE_YN = 'Y') AS EMP_NM
+             , (SELECT DEPT_NAME FROM V_USER_INFO WHERE EMP_SEQ = A.EMP_SEQ AND MAIN_COMP_YN = 'Y' AND MAIN_DEPT_YN = 'Y' AND USE_YN = 'Y') AS DEPT_NM
+        FROM TAM_WORK_GRUP_REG_DTL A
+                 LEFT JOIN TAM_WORK_GRUP_REG_DTL_RCS B ON A.WORK_GRUP_REG_DTL_SEQ = B.WORK_GRUP_REG_DTL_SEQ AND B.DEL_YN = 'N'
+                 LEFT JOIN TAM_WORK_GRUP_REG C ON A.WORK_GRUP_REG_SEQ = C.WORK_GRUP_REG_SEQ
+        WHERE A.DEL_YN = 'N'
+          AND C.DEL_YN = 'N'
+          AND A.GOWRK_TM <![CDATA[<>]]>''
+        GROUP BY A.WORK_GRUP_REG_DTL_SEQ
+        ORDER BY A.WORK_GRUP_REG_SEQ, A.CRTR_DT
+    </select>
+
+    <select id="getWorkList" resultType="com.example.demo.sample.VoMap">
+        SELECT A.*
+        , C.WORK_GRUP_KIND_SEQ
+        , IF(B.WORK_PLAN_RCS_SEQ IS NULL, '[]', CONCAT('[', GROUP_CONCAT(JSON_OBJECT('startDt', IFNULL(B.RCSBGN_DT, ''), 'startTm', IFNULL(B.RCSBGN_TM, ''),'endDt', IFNULL(B.RCSEND_DT, ''),'endTm', IFNULL(B.RCSEND_TM, ''),'brkMin', IFNULL(B.RCS_MIN, 0)) ORDER BY CONCAT(B.RCSBGN_DT,B.RCSBGN_TM,'00')), ']')) AS RCS_JSON
+        , (SELECT emp_name_kr FROM neos_35034.t_co_emp WHERE EMP_SEQ = A.EMP_SEQ AND USE_YN = 'Y' GROUP BY EMP_SEQ) AS EMP_NM
+        , (SELECT dept_name_kr FROM neos_35034.t_co_dept WHERE DEPT_SEQ = A.DEPT_SEQ AND USE_YN = 'Y' GROUP BY DEPT_SEQ) AS DEPT_NM
+        FROM CUSTOM.TAM_WORK_PLAN A
+        LEFT JOIN CUSTOM.TAM_WORK_PLAN_RCS B ON A.WORK_PLAN_SEQ = B.WORK_PLAN_SEQ AND B.DEL_YN = 'N'
+        LEFT JOIN CUSTOM.TAM_WORK_GRUP_REG_DTL C ON A.WORK_GRUP_REG_DTL_SEQ = C.WORK_GRUP_REG_DTL_SEQ AND C.DEL_YN = 'N'
+        WHERE A.DEL_YN = 'N'
+        AND A.RGTR_SEQ != 'SYSTEM'
+        AND A.GOWRK_TM <![CDATA[<>]]>''
+        GROUP BY A.WORK_PLAN_SEQ
+        ORDER BY A.CRTR_DT
+    </select>
+
+    <select id="WORK_DATE_INFO" parameterType="Map" resultType="com.example.demo.sample.VoMap">
+        /*HRB0012Mapper.WORK_DATE_INFO*/
+        SELECT *
+        FROM CUSTOM.V_WORK_SCH
+        WHERE DATE = #{date}
+          AND EMP_SEQ = #{empSeq}
+
+    </select>
+
+    <select id="HRD0001_OT_DATA" parameterType="Map" resultType="com.example.demo.sample.VoMap">
+        /*HRD0001Mapper.HRD0001_OT_DATA*/
+        SELECT *
+        FROM CUSTOM.TAM_OVTMWRK_STNG
+        WHERE DEL_YN = 'N'
+          AND APLCN_YMD <![CDATA[<=]]> DATE_FORMAT(IFNULL(#{crtrYmd}, NOW()), '%Y%m%d')
+        ORDER BY APLCN_YMD DESC
+        LIMIT 1
+    </select>
+
+    <select id="getHoliDayList" parameterType="Map" resultType="com.example.demo.sample.VoMap">
+        SELECT
+        A.DATE
+        , A.EMP_SEQ
+        , A.WHRSUM
+        , IF(A.HOLIDAY_TITLE <![CDATA[<>'']]>, A.HOLIDAY_TITLE, '대체휴일') AS HOLIDAY_TITLE
+        , IFNULL(B.APLY_OVTMWRK_MIN, 0) AS APLY_OVTMWRK_MIN
+        , IFNULL(B.APLY_HLDY_WRK_MIN, 0) AS APLY_HLDY_WRK_MIN
+        , IFNULL(B.ALLW_OVTMWRK_MIN, 0) AS ALLW_OVTMWRK_MIN
+        , IFNULL(B.ALLW_HLDY_WRK_MIN, 0) AS ALLW_HLDY_WRK_MIN
+        FROM CUSTOM.V_WORK_SCH A
+        LEFT JOIN CUSTOM.V_OT_INFO B ON A.EMP_SEQ = B.EMP_SEQ AND A.DATE = B.CRTR_YMD
+        WHERE A.EMP_SEQ = #{empSeq}
+        <![CDATA[
+        AND (A.HDAY_YN = 'Y' OR A.ALT_DYOFF_YMD <>'')
+        AND A.DAY_OF_WEEK NOT IN ('7', '1')
+        ]]>
+        <if test="type != null and !type.equals('')">
+            <choose>
+                <when test="type.equals('day')">
+                    AND A.DATE = #{date}
+                </when>
+                <when test="type.equals('week')">
+                    AND A.YEAR = YEAR(#{date}) and WEEK = LPAD(WEEK(#{date}, 5), 2, '0')
+                </when>
+                <when test="type.equals('month')">
+                    AND A.DATE LIKE CONCAT(MONTH(#{date}),'%')
+                </when>
+                <when test="type.equals('flxb')">
+                    AND A.DATE IN (SELECT CRTR_DT
+                    FROM CUSTOM.TAM_WORK_PLAN WHERE DEL_YN = 'N' and FLXBWK_APLY_SEQ = #{flxbwkAplySeq})
+                </when>
+            </choose>
+        </if>
+
+    </select>
+
+    <select id="getWpOtList" parameterType="Map" resultType="com.example.demo.sample.VoMap">
+        SELECT
+        A.OVTMWRK_APLY_DTL_SEQ
+        , A.OVTMWRK_APLY_SEQ
+        , A.OVTMWRK_MBL_APLY_SEQ
+        , A.EMP_SEQ
+        , A.DEPT_SEQ
+        , A.JBGD_CD
+        , A.JBTTL_CD
+        , A.APLY_DIV
+        , A.CMPN_DIV
+        , A.ALT_DYOFF_YMD
+        , A.WORK_PLAN_SEQ
+        , A.CRTR_YMD
+        , A.BGNG_YMD
+        , A.BGNG_TM
+        , A.END_YMD
+        , A.END_TM
+        , A.APLY_REST_MIN
+        , A.APLY_HLDY_OVTMWRK_MIN
+        , A.APLY_NGHT_MIN
+        , A.REASON
+        , A.GTWK_TM
+        , A.LVWK_TM
+        , A.ALLW_REST_MIN
+        , A.ALLW_HLDY_OVTMWRK_MIN
+        , A.ALLW_NGHT_MIN
+        , A.ALLW_DAYHLDY_WRK_MIN
+        , A.CMPN_VCT_END_YMD
+        , A.CMPN_VCT_END_YN
+        , A.ALLW_CAL_YN
+        , A.DEL_YN
+        , A.RGTR_SEQ
+        , A.REG_YMD
+        , A.MDF_SEQ
+        , A.MDF_YMD
+        , IFNULL(A.APLY_OVTMWRK_MIN, 0) AS APLY_OVTMWRK_MIN
+        , IFNULL(A.APLY_HLDY_WRK_MIN, 0) AS APLY_HLDY_WRK_MIN
+        , IFNULL(A.APLY_OVTMWRK_MIN, 0) + IFNULL(A.APLY_HLDY_WRK_MIN, 0) AS APLY_WRK_MIN
+        , IFNULL(A.ALLW_OVTMWRK_MIN, 0) AS ALLW_OVTMWRK_MIN
+        , IFNULL(A.ALLW_HLDY_WRK_MIN, 0) AS ALLW_HLDY_WRK_MIN
+        , IFNULL(A.ALLW_OVTMWRK_MIN, 0) + IFNULL(A.ALLW_HLDY_WRK_MIN, 0) AS ALLW_WRK_MIN
+        , B.APLY_YMD
+        , IFNULL(C.APRV_STS, '000') AS APRV_STS
+        , C.RJT_RSN
+        , D.OT_ALT_DYOFF_YMD
+        , D.HDAY_YN
+        , D.DAY_OF_WEEK
+        , D.EMP_NAME
+        FROM CUSTOM.TAM_OVTMWRK_APLY_DTL A
+        JOIN CUSTOM.TAM_OVTMWRK_APLY B ON A.OVTMWRK_APLY_SEQ = B.OVTMWRK_APLY_SEQ
+        LEFT JOIN CUSTOM.CMMN_APRV_MNG C ON C.TBL_NM = 'TAM_OVTMWRK_APLY' AND C.TBL_SEQ = B.OVTMWRK_APLY_SEQ AND C.DEL_YN = 'N'
+        LEFT JOIN CUSTOM.V_WORK_SCH D ON A.EMP_SEQ = D.EMP_SEQ AND A.CRTR_YMD = D.DATE
+        WHERE A.DEL_YN = 'N'
+        AND B.DEL_YN = 'N'
+        <if test="empSeq != null and !empSeq.equals('')">
+            AND (B.EMP_SEQ = #{empSeq} OR A.EMP_SEQ = #{empSeq})
+        </if>
+        <if test="yearMonth != null and !yearMonth.equals('')">
+            AND A.CRTR_YMD LIKE CONCAT(#{yearMonth}, '%')
+        </if>
+        <if test="searchType != null and !searchType.equals('')">
+            <choose>
+                <when test="searchType.equals('target')">
+                    AND A.EMP_SEQ = #{searchEmpSeq}
+                </when>
+                <when test="searchType.equals('aply')">
+                    AND B.EMP_SEQ = #{searchEmpSeq}
+                </when>
+            </choose>
+        </if>
+        <if test="searchType != null and searchType.equals('')">
+            AND (A.EMP_SEQ = #{searchEmpSeq} OR B.EMP_SEQ = #{searchEmpSeq})
+        </if>
+        <if test="type != null and !type.equals('')">
+            <choose>
+                <when test="type.equals('day')">
+                    AND A.CRTR_YMD = #{date}
+                </when>
+                <when test="type.equals('week')">
+                    AND YEAR(A.CRTR_YMD) = YEAR(#{date}) AND WEEK(A.CRTR_YMD, 5) = WEEK(#{date}, 5)
+                </when>
+                <when test="type.equals('month')">
+                    AND A.CRTR_YMD LIKE CONCAT(DATE_FORMAT(#{date}, '%Y%m'),'%')
+                </when>
+                <when test="type.equals('alt')">
+                    AND A.ALT_DYOFF_YMD = #{date}
+                </when>
+                <when test="type.equals('flxb')">
+                    AND A.CRTR_YMD IN (SELECT CRTR_DT
+                    FROM CUSTOM.TAM_WORK_PLAN WHERE DEL_YN = 'N' and FLXBWK_APLY_SEQ = #{flxbwkAplySeq})
+                </when>
+            </choose>
+        </if>
+        <if test="ovtmwrkAplySeq != null and !ovtmwrkAplySeq.equals('')">
+            AND A.OVTMWRK_APLY_SEQ = #{ovtmwrkAplySeq}
+        </if>
+        <if test="startDt != null and !startDt.equals('')">
+            AND A.CRTR_YMD BETWEEN #{startDt} AND #{endDt}
+        </if>
+        <if test="exceptSts != null and !exceptSts.equals('')">
+            AND C.APRV_STS != #{exceptSts}
+        </if>
+    </select>
+
+    <select id="getWorkPlanList" parameterType="Map" resultType="com.example.demo.sample.VoMap">
+        SELECT
+        *
+        FROM CUSTOM.V_WORK_SCH
+        WHERE 1=1
+        <if test="empSeq != null and !empSeq.equals('')">
+            AND EMP_SEQ = #{empSeq}
+        </if>
+        <if test="type != null and !type.equals('')">
+            <choose>
+                <when test="type.equals('day')">
+                    AND DATE = #{date}
+                </when>
+                <when test="type.equals('week')">
+                    AND YEAR = YEAR(#{date}) and WEEK(DATE, 5) = WEEK(#{date}, 5)
+                </when>
+                <when test="type.equals('month')">
+                    AND DATE LIKE CONCAT(MONTH(#{date}),'%')
+                </when>
+                <when test="type.equals('flxb')">
+                    AND DATE IN (SELECT CRTR_DT
+                    FROM CUSTOM.TAM_WORK_PLAN WHERE DEL_YN = 'N' and FLXBWK_APLY_SEQ = #{flxbwkAplySeq})
+                </when>
+            </choose>
+        </if>
+        <if test="altDayoffYmd != null and altDayoffYmd != ''">
+            AND (WP_ALT_DYOFF_YMD = #{altDayoffYmd} OR OT_ALT_DYOFF_YMD = #{altDayoffYmd})
+        </if>
+
+    </select>
+
+    <select id="CWG0006_OT_DATA" parameterType="Map" resultType="com.example.demo.sample.VoMap">
+        /*CWG0006Mapper.CWG0006_OT_DATA*/
+        SELECT *
+        FROM CUSTOM.TAM_OVTMWRK_STNG
+        WHERE DEL_YN = 'N'
+          AND APLCN_YMD <![CDATA[<=]]> DATE_FORMAT(NOW(), '%Y%m%d')
+        ORDER BY APLCN_YMD DESC
+        LIMIT 1
+    </select>
+
+    <select id="getCmpnMst" parameterType="Map" resultType="com.example.demo.sample.VoMap">
+        SELECT
+            *
+        FROM CUSTOM.TAM_CMPN_MIN
+        WHERE EMP_SEQ = #{empSeq}
+          AND DEL_YN = 'N'
+    </select>
+
+    <select id="getOtList" parameterType="Map" resultType="com.example.demo.sample.VoMap">
+        SELECT T.*
+        , AT.COME_TM AS COME_TM
+        , AT.LEAVE_TM AS LEAVE_TM
+        , AT.COME_ST_TM AS COME_ST_TM
+        , AT.LEAVE_ST_TM AS LEAVE_ST_TM
+        FROM (
+        SELECT
+        CASE WHEN WS.COMM_GROUP_SEQ = '16' THEN
+        CASE WHEN ('7' = WS.DAY_OF_WEEK or '1' = WS.DAY_OF_WEEK or WS.HDAY_YN = 'Y') THEN '004' ELSE '002' END
+        ELSE
+        '002'
+        END       AS APLY_DIV
+        , 'FOT'     AS TYPE
+        , '000' AS CMPN_DIV
+        , WS.WORK_PLAN_SEQ AS OVTMWRK_APLY_DTL_SEQ
+        , WS.EMP_SEQ     AS EMP_SEQ
+        , WS.DATE        AS CRTR_YMD
+        , WS.START_DT AS PLAN_START_DT
+        , WS.END_DT AS PLAN_END_DT
+        , WS.START_TM AS PLAN_START_TM
+        , WS.END_TM AS PLAN_END_TM
+        , IFNULL(WS.OT_GOWRK_TM, '') AS BGNG_TM
+        , IFNULL(WS.OT_LVWRK_TM, '') AS END_TM
+        , IFNULL(WS.OT_GOWRK_DT, '') AS BGNG_YMD
+        , IFNULL(WS.OT_LVWRK_DT, '') AS END_YMD
+        , WS.RCS_JSON    AS RCS_JSON
+        <![CDATA[
+		, CONCAT(IF(WS.START_DT != WS.END_DT, 'M','S'), '_', IF(S_HOLI.H_DAY <>'', 'Y','N'), IF(E_HOLI.H_DAY <>'', 'Y','N')) AS HOLI_YN
+		]]>
+        , IFNULL(S_HOLI.H_DAY, '') AS S_H_DAY
+        , IFNULL(E_HOLI.H_DAY, '') AS E_H_DAY
+        , WS. HDAY_YN
+        , WS.COMM_GROUP_SEQ
+        , WS.WHRSUM
+        , WS.APLY_ALT_DYOFF_YMD
+        , WS.DAY_OF_WEEK
+        FROM (
+        SELECT EMP_CAL.EMP_SEQ
+        , EMP_CAL.DATE
+        , EMP_CAL.MONTH
+        , EMP_CAL.YEAR
+        , EMP_CAL.DAY_OF_WEEK
+        <![CDATA[
+			, IF(EMP_CAL.H_DAY <> '', 'Y', 'N')              AS HDAY_YN
+			 ]]>
+        , EMP_CAL.GROUP_SEQ                              AS COMM_GROUP_SEQ
+        , EMP_CAL.WHRSUM
+        , IFNULL(WP.ALT_DYOFF_YMD, '')                   AS APLY_ALT_DYOFF_YMD
+        , WP.FOT_GOWRK_DT                                AS OT_GOWRK_DT
+        , WP.FOT_GOWRK_TM                                AS OT_GOWRK_TM
+        , WP.FOT_LVWRK_DT                                AS OT_LVWRK_DT
+        , WP.FOT_LVWRK_TM                                AS OT_LVWRK_TM
+        , WP.WORK_PLAN_SEQ
+        , WP.OT_NGHT_MIN AS FOT_NGHT_MIN
+        , CASE
+        WHEN WP.WORK_PLAN_SEQ IS NOT NULL AND WP.WORK_TYPE <![CDATA[<>]]> '003' THEN WP.WORK_RCS_JSON
+        WHEN '7' = EMP_CAL.DAY_OF_WEEK OR '1' = EMP_CAL.DAY_OF_WEEK THEN '[]'
+        WHEN EMP_CAL.H_DAY IS NOT NULL THEN '[]'
+        ELSE EMP_CAL.RCS_JSON END                  AS RCS_JSON
+
+        , CASE
+        WHEN WP.WORK_PLAN_SEQ IS NOT NULL
+        THEN CASE WHEN WP.WRKDY_FG_CD = 'H' THEN '' ELSE WP.GOWRK_DT END
+        ELSE CASE
+        WHEN '7' = EMP_CAL.DAY_OF_WEEK OR '1' = EMP_CAL.DAY_OF_WEEK OR
+        EMP_CAL.H_DAY IS NOT NULL THEN ''
+        WHEN EMP_CAL.H_DAY IS NOT NULL THEN ''
+        ELSE EMP_CAL.DATE END END         AS START_DT
+        , CASE
+        WHEN WP.WORK_PLAN_SEQ IS NOT NULL
+        THEN CASE WHEN WP.WRKDY_FG_CD = 'H' THEN '' ELSE WP.GOWRK_TM END
+        ELSE CASE
+        WHEN '7' = EMP_CAL.DAY_OF_WEEK OR '1' = EMP_CAL.DAY_OF_WEEK OR
+        EMP_CAL.H_DAY IS NOT NULL THEN ''
+        WHEN EMP_CAL.H_DAY IS NOT NULL THEN ''
+        ELSE EMP_CAL.CRWORKBG_TM END END  AS START_TM
+        , CASE
+        WHEN WP.WORK_PLAN_SEQ IS NOT NULL
+        THEN CASE WHEN WP.WRKDY_FG_CD = 'H' THEN '' ELSE WP.LVWRK_DT END
+        ELSE CASE
+        WHEN '7' = EMP_CAL.DAY_OF_WEEK OR '1' = EMP_CAL.DAY_OF_WEEK OR
+        EMP_CAL.H_DAY IS NOT NULL THEN ''
+        WHEN EMP_CAL.H_DAY IS NOT NULL THEN ''
+        ELSE EMP_CAL.DATE END END         AS END_DT
+        , CASE
+        WHEN WP.WORK_PLAN_SEQ IS NOT NULL
+        THEN CASE WHEN WP.WRKDY_FG_CD = 'H' THEN '' ELSE WP.LVWRK_TM END
+        ELSE CASE
+        WHEN '7' = EMP_CAL.DAY_OF_WEEK OR '1' = EMP_CAL.DAY_OF_WEEK OR
+        EMP_CAL.H_DAY IS NOT NULL THEN ''
+        WHEN EMP_CAL.H_DAY IS NOT NULL THEN ''
+        ELSE EMP_CAL.CRWORKEND_TM END END AS END_TM
+        , WP.ALLW_CAL_YN
+        FROM (SELECT *
+        FROM CUSTOM.V_WORK_CALENDAR CAL
+        JOIN CUSTOM.V_WORK_EMP EMP) EMP_CAL
+        LEFT JOIN CUSTOM.V_WORK_PLAN WP ON EMP_CAL.DATE = WP.CRTR_DT AND EMP_CAL.EMP_SEQ = WP.EMP_SEQ
+        WHERE WP.WORK_PLAN_SEQ IS NOT NULL AND WP.ALLW_CAL_YN = 'N'
+        ) WS
+        LEFT JOIN CUSTOM.T_CO_HOLIDAY S_HOLI ON WS.START_DT = S_HOLI.H_DAY AND S_HOLI.COMP_SEQ = '0' AND S_HOLI.USE_YN = 'Y'
+        LEFT JOIN CUSTOM.T_CO_HOLIDAY E_HOLI ON WS.END_DT = E_HOLI.H_DAY AND E_HOLI.COMP_SEQ = '0' AND E_HOLI.USE_YN = 'Y'
+        WHERE WS.ALLW_CAL_YN = 'N'
+        <![CDATA[
+	  	AND (WS.OT_GOWRK_DT <> ''
+        AND WS.OT_GOWRK_TM <> ''
+        AND WS.OT_LVWRK_DT <> ''
+        AND WS.OT_LVWRK_TM <> ''
+         OR WS.FOT_NGHT_MIN > 0)
+		]]>
+        <if test="empSeq != null and empSeq != ''">
+            AND WS.EMP_SEQ = #{empSeq}
+        </if>
+        <if test="date != null and date != ''">
+            AND WS.DATE = #{date}
+        </if>
+        <if test="list != null and list.size != 0">
+            AND CONCAT(WS.EMP_SEQ, '_', WS.DATE) IN
+            <foreach collection="list" open="(" close=")" item="item" separator="," index="index">
+                CONCAT(#{item.empSeq}, '_' ,#{item.date})
+            </foreach>
+        </if>
+        UNION ALL
+
+        SELECT
+        OT.APLY_DIV AS APLY_DIV
+        , 'OT'     AS TYPE
+        , OT.CMPN_DIV AS CMPN_DIV
+        , OT.OVTMWRK_APLY_DTL_SEQ AS OVTMWRK_APLY_DTL_SEQ
+        , OT.EMP_SEQ  AS EMP_SEQ
+        , OT.CRTR_YMD AS CRTR_YMD
+        , WS.START_DT AS PLAN_START_DT
+        , WS.END_DT AS PLAN_END_DT
+        , WS.START_TM AS PLAN_START_TM
+        , WS.END_TM AS PLAN_END_TM
+        , OT.BGNG_TM  AS BGNG_TM
+        , OT.END_TM   AS END_TM
+        , OT.BGNG_YMD AS BGNG_YMD
+        , OT.END_YMD  AS END_YMD
+        , WS.RCS_JSON AS RCS_JSON
+        , 'N_NN' AS HOLI_YN
+        , '' AS S_H_DAY
+        , '' AS E_H_DAY
+        , WS. HDAY_YN
+        , WS.COMM_GROUP_SEQ
+        , WS.WHRSUM
+        , '' AS APLY_ALT_DYOFF_YMD
+        , WS.DAY_OF_WEEK
+        FROM (
+        SELECT *
+        FROM CUSTOM.V_OT_INFO
+        WHERE APRV_STS = '002'
+        AND ALLW_CAL_YN = 'N'
+        ) OT
+        JOIN (
+        SELECT EMP_CAL.EMP_SEQ
+        , EMP_CAL.DATE
+        , EMP_CAL.MONTH
+        , EMP_CAL.YEAR
+        , EMP_CAL.DAY_OF_WEEK
+        <![CDATA[
+			, IF(EMP_CAL.H_DAY <> '', 'Y', 'N')              AS HDAY_YN
+			]]>
+        , EMP_CAL.GROUP_SEQ                              AS COMM_GROUP_SEQ
+        , EMP_CAL.WHRSUM
+        , CASE
+        WHEN WP.WORK_PLAN_SEQ IS NOT NULL AND WP.WORK_TYPE <![CDATA[<>]]> '003' THEN WP.WORK_RCS_JSON
+        WHEN '7' = EMP_CAL.DAY_OF_WEEK OR '1' = EMP_CAL.DAY_OF_WEEK THEN '[]'
+        WHEN EMP_CAL.H_DAY IS NOT NULL THEN '[]'
+        ELSE EMP_CAL.RCS_JSON END                  AS RCS_JSON
+
+        , CASE
+        WHEN WP.WORK_PLAN_SEQ IS NOT NULL
+        THEN CASE WHEN WP.WRKDY_FG_CD = 'H' THEN '' ELSE WP.GOWRK_DT END
+        ELSE CASE
+        WHEN '7' = EMP_CAL.DAY_OF_WEEK OR '1' = EMP_CAL.DAY_OF_WEEK OR
+        EMP_CAL.H_DAY IS NOT NULL THEN ''
+        WHEN EMP_CAL.H_DAY IS NOT NULL THEN ''
+        ELSE EMP_CAL.DATE END END         AS START_DT
+        , CASE
+        WHEN WP.WORK_PLAN_SEQ IS NOT NULL
+        THEN CASE WHEN WP.WRKDY_FG_CD = 'H' THEN '' ELSE WP.GOWRK_TM END
+        ELSE CASE
+        WHEN '7' = EMP_CAL.DAY_OF_WEEK OR '1' = EMP_CAL.DAY_OF_WEEK OR
+        EMP_CAL.H_DAY IS NOT NULL THEN ''
+        WHEN EMP_CAL.H_DAY IS NOT NULL THEN ''
+        ELSE EMP_CAL.CRWORKBG_TM END END  AS START_TM
+        , CASE
+        WHEN WP.WORK_PLAN_SEQ IS NOT NULL
+        THEN CASE WHEN WP.WRKDY_FG_CD = 'H' THEN '' ELSE WP.LVWRK_DT END
+        ELSE CASE
+        WHEN '7' = EMP_CAL.DAY_OF_WEEK OR '1' = EMP_CAL.DAY_OF_WEEK OR
+        EMP_CAL.H_DAY IS NOT NULL THEN ''
+        WHEN EMP_CAL.H_DAY IS NOT NULL THEN ''
+        ELSE EMP_CAL.DATE END END         AS END_DT
+        , CASE
+        WHEN WP.WORK_PLAN_SEQ IS NOT NULL
+        THEN CASE WHEN WP.WRKDY_FG_CD = 'H' THEN '' ELSE WP.LVWRK_TM END
+        ELSE CASE
+        WHEN '7' = EMP_CAL.DAY_OF_WEEK OR '1' = EMP_CAL.DAY_OF_WEEK OR
+        EMP_CAL.H_DAY IS NOT NULL THEN ''
+        WHEN EMP_CAL.H_DAY IS NOT NULL THEN ''
+        ELSE EMP_CAL.CRWORKEND_TM END END AS END_TM
+        FROM (SELECT *
+        FROM CUSTOM.V_WORK_CALENDAR CAL
+        JOIN CUSTOM.V_WORK_EMP EMP) EMP_CAL
+        LEFT JOIN CUSTOM.V_WORK_PLAN WP ON EMP_CAL.DATE = WP.CRTR_DT AND EMP_CAL.EMP_SEQ = WP.EMP_SEQ
+        ) WS ON OT.EMP_SEQ = WS.EMP_SEQ AND OT.CRTR_YMD = WS.DATE
+        WHERE OT.DEL_YN = 'N'
+        <if test="empSeq != null and empSeq != ''">
+            AND OT.EMP_SEQ = #{empSeq}
+        </if>
+        <if test="date != null and date != ''">
+            AND OT.CRTR_YMD = #{date}
+        </if>
+        <if test="list != null and list.size != 0">
+            AND CONCAT(OT.EMP_SEQ, '_', OT.CRTR_YMD) IN
+            <foreach collection="list" open="(" close=")" item="item" separator="," index="index">
+                CONCAT(#{item.empSeq}, '_' ,#{item.date})
+            </foreach>
+        </if>
+        ) T JOIN CUSTOM.TAM_AT_ATT AT ON T.EMP_SEQ = AT.EMP_SEQ AND T.CRTR_YMD = AT.CRTR_YMD
+        WHERE AT.DEL_YN = 'N'
+        AND T.CMPN_DIV != '003'
+        <![CDATA[
+	  	AND AT.COME_TM <> ''
+		AND AT.LEAVE_TM <> ''
+		]]>
+    </select>
+
+    <select id="getCmpnDtl" parameterType="Map" resultType="com.example.demo.sample.VoMap">
+        SELECT *
+        FROM CUSTOM.TAM_CMPN_OCRN
+        WHERE OVTMWRK_APLY_DTL_SEQ = #{ovtmwrkAplyDtlSeq}
+          AND DEL_YN = 'N'
+    </select>
+    <select id="getAnnvList" parameterType="Map" resultType="com.example.demo.sample.VoMap">
+        select
+            a.EMP_SEQ
+             , c.EMP_NAME
+             , c.DATE
+             , a.COME_TM , a.LEAVE_TM, a.COME_ST_TM
+             , b.APLY_SEQ
+             , b.APLY_DTL_SEQ
+             , b.USE_MIN
+             , d.ANNV_START_TM , d.ANNV_END_TM
+             , c.WORK_PLAN_SEQ , c.START_DT , c.START_TM , c.END_DT , c.END_TM , c.RCS_JSON
+        from
+            custom.tam_at_att a
+                join custom.tam_vctn_calendar b on a.EMP_SEQ = b.EMP_SEQ and a.CRTR_YMD = b.`DATE` and b.DEL_YN ='N'
+                join custom.tam_annv_aply_dtl d on b.APLY_DTL_SEQ  = d.ANNV_APLY_DTL_SEQ and b.VCTN_TYPE = 'A'
+                left join custom.v_work_sch c on a.EMP_SEQ = c.EMP_SEQ and a.CRTR_YMD = c.`DATE`
+
+        where
+            date_format(CRTR_YMD, '%Y') = '2024'
+          and d.ANNV_START_TM <![CDATA[<>]]>''
+          and c.WORK_PLAN_SEQ is null
+    </select>
+    <select id="getNight2100List" parameterType="Map" resultType="com.example.demo.sample.VoMap">
+        select T.*
+        from (select A.*
+        , B.comp_seq
+        , B.emp_seq
+        , B.erp_emp_num
+        , B.emp_name
+        , B.dept_seq
+        , B.dept_name
+        , B.position_name
+        , B.GROUP_SEQ
+        , B.GROUP_NM
+        , CASE
+        WHEN C.WORK_PLAN_SEQ IS NOT NULL
+        THEN CASE WHEN C.WRKDY_FG_CD = 'H' THEN '' ELSE C.GOWRK_DT END
+        ELSE CASE
+        WHEN '7' = A.DAY_OF_WEEK OR '1' = A.DAY_OF_WEEK OR
+        A.H_DAY IS NOT NULL THEN ''
+        WHEN A.H_DAY IS NOT NULL THEN ''
+        ELSE A.DATE END END         AS PLAN_START_DT
+        , CASE
+        WHEN C.WORK_PLAN_SEQ IS NOT NULL
+        THEN CASE WHEN C.WRKDY_FG_CD = 'H' THEN '' ELSE C.LVWRK_DT END
+        ELSE CASE
+        WHEN '7' = A.DAY_OF_WEEK OR '1' = A.DAY_OF_WEEK OR
+        A.H_DAY IS NOT NULL THEN ''
+        WHEN A.H_DAY IS NOT NULL THEN ''
+        ELSE A.DATE END END         AS PLAN_END_DT
+        , CASE
+        WHEN C.WORK_PLAN_SEQ IS NOT NULL
+        THEN CASE WHEN C.WRKDY_FG_CD = 'H' THEN '' ELSE C.GOWRK_TM END
+        ELSE CASE
+        WHEN '7' = A.DAY_OF_WEEK OR '1' = A.DAY_OF_WEEK OR
+        A.H_DAY IS NOT NULL THEN ''
+        WHEN A.H_DAY IS NOT NULL THEN ''
+        ELSE B.CRWORKBG_TM END END  AS PLAN_START_TM
+        , CASE
+        WHEN C.WORK_PLAN_SEQ IS NOT NULL
+        THEN CASE WHEN C.WRKDY_FG_CD = 'H' THEN '' ELSE C.LVWRK_TM END
+        ELSE CASE
+        WHEN '7' = A.DAY_OF_WEEK OR '1' = A.DAY_OF_WEEK OR
+        A.H_DAY IS NOT NULL THEN ''
+        WHEN A.H_DAY IS NOT NULL THEN ''
+        ELSE B.CRWORKEND_TM END END AS PLAN_END_TM
+                   <![CDATA[
+        , CASE
+        WHEN C.WORK_PLAN_SEQ IS NOT NULL AND C.WORK_TYPE <> '003' THEN C.WORK_RCS_JSON
+        WHEN '7' = A.DAY_OF_WEEK OR '1' = A.DAY_OF_WEEK THEN '[]'
+        WHEN A.H_DAY IS NOT NULL THEN '[]'
+        ELSE B.RCS_JSON END AS RCS_JSON
+        ]]>
+        , D.COME_TM
+        , D.LEAVE_TM
+        from custom.v_work_calendar A
+        join custom.v_work_emp B
+        left join custom.v_work_plan C on B.EMP_SEQ = C.EMP_SEQ and A.DATE = C.CRTR_DT
+        left join custom.tam_at_att D on A.DATE = D.CRTR_YMD and B.emp_seq = D.emp_seq
+        where A.DATE > '20240811'
+        and A.DATE like '202408%'
+        <![CDATA[
+        and concat(A.DATE, '2100') <= D.LEAVE_TM
+        and A.DAY_OF_WEEK != '1'
+        and A.h_day is null
+        and B.GROUP_SEQ not in ('10', '11', '12', '13', '14', '15', '8', '16', '7')
+        ) T
+        where T.COME_TM <>''
+        and T.LEAVE_TM <>''
+        ]]>
+        and T.erp_emp_num not in (
+            'C202302'
+            ,'C202317'
+            ,'C202318'
+            ,'C202319'
+            ,'C202410'
+            ,'C202411'
+            ,'C202412'
+            ,'C202421'
+            ,'C202213'
+            ,'C202218'
+            ,'C202407'
+            ,'C202424'
+            )
     </select>
 
 </mapper>
