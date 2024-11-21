@@ -3,6 +3,7 @@ package com.example.demo.sample;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -37,13 +38,18 @@ public class OTService {
 	public void setAllw(List<Map<String, Object>> list) throws ParseException {
 		Map<String, Object> param = new HashMap<>();
 		Map<String, Object> otSetting = userDao.CWG0006_OT_DATA(param);
+		// 계획시작종료 그대로 이정하는 직군들
+		List<String> strList = new ArrayList<>(Arrays.asList("10", "11", "12", "13", "14", "15", "8", "16"));
+		// 위 직군 중 보안을 제외
+		List<String> strList2 = new ArrayList<>(Arrays.asList("10", "11", "12", "13", "14", "15"));
 
 		for (Map<String, Object> data : list) {
 
 			String crtrDtStr = String.valueOf(data.get("crtrYmd"));
-			if (crtrDtStr != null && !crtrDtStr.isEmpty()) {
+			if (crtrDtStr != null && !crtrDtStr.isEmpty()
+			) {
 				int crtrDt = Integer.parseInt(crtrDtStr);
-				if (crtrDt < 20240812) {
+				if (crtrDt < 20240812 && !strList.contains(String.valueOf(data.get("commGroupSeq")))) {
 					continue;
 				}
 			}
@@ -52,77 +58,11 @@ public class OTService {
 				continue;
 			}
 
-			List<String> breakTimeArr = new ArrayList<>();
-			String dataString = JsonUtil.convertToJson(data);
-			log.info("data : " + dataString);
-
-			if ("003".equals(data.get("aplyDiv"))) {
-				int start = Integer.parseInt(String.valueOf(data.get("bgngTm")));
-				int end = Integer.parseInt(String.valueOf(data.get("endTm")));
-				if (!String.valueOf(data.get("bgngYmd")).equals(String.valueOf(data.get("crtrYmd")))) {
-					start = start + 2400;
-				}
-				if (!String.valueOf(data.get("endYmd")).equals(String.valueOf(data.get("crtrYmd")))) {
-					end = end + 2400;
-				}
-				List<Map<String, Object>> rcsList = getBreakTimes(String.format("%04d", start), String.format("%04d", end));
-				for (Map<String, Object> rcs : rcsList) {
-					if (rcs.get("startTm") != null && rcs.get("endTm") != null) {
-						breakTimeArr.add(String.valueOf(rcs.get("startTm")));
-						breakTimeArr.add(String.valueOf(rcs.get("endTm")));
-					}
-				}
-			} else {
-				List<Map<String, Object>> rcsList = data.get("rcsJson") == null ? new ArrayList<>() : JsonUtil.convertToList(String.valueOf(data.get("rcsJson")));
-				for (Map<String, Object> rcs : rcsList) {
-					if (rcs.get("RCSBGN_TM") != null && rcs.get("RCSEND_TM") != null) {
-						if (rcs.get("RCSBGN_DT") != null && rcs.get("RCSEND_DT") != null) {
-							String rcsStartTm = String.valueOf(rcs.get("RCSBGN_TM"));
-							String rcsEndTm = String.valueOf(rcs.get("RCSEND_TM"));
-							if (Integer.parseInt(String.valueOf(data.get("crtrYmd"))) < Integer.parseInt(String.valueOf(rcs.get("RCSBGN_DT")))) {
-								rcsStartTm = Integer.parseInt(String.valueOf(rcs.get("RCSBGN_TM"))) + 2400 + "";
-							} else {
-								rcsStartTm = String.valueOf(rcs.get("RCSBGN_TM"));
-							}
-							if (Integer.parseInt(String.valueOf(data.get("crtrYmd"))) < Integer.parseInt(String.valueOf(rcs.get("RCSEND_DT")))) {
-								rcsEndTm = Integer.parseInt(String.valueOf(rcs.get("RCSEND_TM"))) + 2400 + "";
-							} else {
-								rcsEndTm = String.valueOf(rcs.get("RCSEND_TM"));
-							}
-
-							breakTimeArr.add(rcsStartTm);
-							breakTimeArr.add(rcsEndTm);
-						} else {
-							breakTimeArr.add(String.valueOf(rcs.get("RCSBGN_TM")));
-							breakTimeArr.add(String.valueOf(rcs.get("RCSEND_TM")));
-						}
-					}
-				}
-			}
-
-			if ("7".equals(data.get("dayOfWeek")) && "OT".equals(data.get("type")) && breakTimeArr.size() == 0) {
-				int start = Integer.parseInt(String.valueOf(data.get("bgngTm")));
-				int end = Integer.parseInt(String.valueOf(data.get("endTm")));
-				if (!String.valueOf(data.get("bgngYmd")).equals(String.valueOf(data.get("crtrYmd")))) {
-					start = start + 2400;
-				}
-				if (!String.valueOf(data.get("endYmd")).equals(String.valueOf(data.get("crtrYmd")))) {
-					end = end + 2400;
-				}
-				List<Map<String, Object>> rcsList = getBreakTimes(String.format("%04d", start), String.format("%04d", end));
-				for (Map<String, Object> rcs : rcsList) {
-					if (rcs.get("startTm") != null && rcs.get("endTm") != null) {
-						breakTimeArr.add(String.valueOf(rcs.get("startTm")));
-						breakTimeArr.add(String.valueOf(rcs.get("endTm")));
-					}
-				}
-			}
-
 			String come = String.valueOf(data.get("comeTm"));
 			String leave = String.valueOf(data.get("leaveTm"));
 
 
-			if (come != null && !come.isEmpty()) {
+			if (come != null && !come.isEmpty() && !"null".equals(come)) {
 				SimpleDateFormat srcFormat = new SimpleDateFormat("yyyyMMddHHmm");
 				Date date = srcFormat.parse(come);
 				SimpleDateFormat destFormat = new SimpleDateFormat("yyyyMMdd");
@@ -135,7 +75,7 @@ public class OTService {
 				}
 			}
 
-			if (leave != null && !leave.isEmpty()) {
+			if (leave != null && !leave.isEmpty() && !"null".equals(leave)) {
 				SimpleDateFormat srcFormat = new SimpleDateFormat("yyyyMMddHHmm");
 				Date date = srcFormat.parse(leave);
 				SimpleDateFormat destFormat = new SimpleDateFormat("yyyyMMdd");
@@ -190,14 +130,91 @@ public class OTService {
 				end = String.format("%04d", endTm);
 			}
 
-			log.info("start : " + start);
-			log.info("end : " + end);
-			log.info("breakTimeArr : " + breakTimeArr);
-			log.info("planStartTm : " + planStartTm);
-			log.info("planEndTm : " + planEndTm);
-			log.info("nghtwrkStartTime : " + nghtwrkStartTime);
-			log.info("nghtwrkEndTime : " + nghtwrkEndTime);
+			List<String> breakTimeArr = new ArrayList<>();
+			String dataString = JsonUtil.convertToJson(data);
+			log.info("data : " + dataString);
 
+			if ("003".equals(data.get("aplyDiv"))) {
+				int st = Integer.parseInt(String.valueOf(data.get("bgngTm")));
+				int ed = Integer.parseInt(String.valueOf(data.get("endTm")));
+				if (!String.valueOf(data.get("bgngYmd")).equals(String.valueOf(data.get("crtrYmd")))) {
+					st = st + 2400;
+				}
+				if (!String.valueOf(data.get("endYmd")).equals(String.valueOf(data.get("crtrYmd")))) {
+					ed = ed + 2400;
+				}
+				List<Map<String, Object>> rcsList = getBreakTimes(String.format("%04d", st), String.format("%04d", ed));
+				for (Map<String, Object> rcs : rcsList) {
+					if (rcs.get("startTm") != null && rcs.get("endTm") != null) {
+						breakTimeArr.add(String.valueOf(rcs.get("startTm")));
+						breakTimeArr.add(String.valueOf(rcs.get("endTm")));
+					}
+				}
+			} else {
+				List<Map<String, Object>> rcsList = data.get("rcsJson") == null ? new ArrayList<>() : JsonUtil.convertToList(String.valueOf(data.get("rcsJson")));
+				for (Map<String, Object> rcs : rcsList) {
+					if (rcs.get("RCSBGN_TM") != null && rcs.get("RCSEND_TM") != null) {
+						if (rcs.get("RCSBGN_DT") != null && rcs.get("RCSEND_DT") != null) {
+							String rcsStartTm = String.valueOf(rcs.get("RCSBGN_TM"));
+							String rcsEndTm = String.valueOf(rcs.get("RCSEND_TM"));
+							if (Integer.parseInt(String.valueOf(data.get("crtrYmd"))) < Integer.parseInt(String.valueOf(rcs.get("RCSBGN_DT")))) {
+								rcsStartTm = Integer.parseInt(String.valueOf(rcs.get("RCSBGN_TM"))) + 2400 + "";
+							} else {
+								rcsStartTm = String.valueOf(rcs.get("RCSBGN_TM"));
+							}
+							if (Integer.parseInt(String.valueOf(data.get("crtrYmd"))) < Integer.parseInt(String.valueOf(rcs.get("RCSEND_DT")))) {
+								rcsEndTm = Integer.parseInt(String.valueOf(rcs.get("RCSEND_TM"))) + 2400 + "";
+							} else {
+								rcsEndTm = String.valueOf(rcs.get("RCSEND_TM"));
+							}
+
+							breakTimeArr.add(rcsStartTm);
+							breakTimeArr.add(rcsEndTm);
+						} else {
+							breakTimeArr.add(String.valueOf(rcs.get("RCSBGN_TM")));
+							breakTimeArr.add(String.valueOf(rcs.get("RCSEND_TM")));
+						}
+					}
+				}
+			}
+
+			if ("7".equals(data.get("dayOfWeek")) && "OT".equals(data.get("type")) && breakTimeArr.size() == 0) {
+				breakTimeArr = new ArrayList<>();
+				int st = Integer.parseInt(String.valueOf(data.get("bgngTm")));
+				int ed = Integer.parseInt(String.valueOf(data.get("endTm")));
+				if (!String.valueOf(data.get("bgngYmd")).equals(String.valueOf(data.get("crtrYmd")))) {
+					st = st + 2400;
+				}
+				if (!String.valueOf(data.get("endYmd")).equals(String.valueOf(data.get("crtrYmd")))) {
+					ed = ed + 2400;
+				}
+				List<Map<String, Object>> rcsList = getBreakTimes(String.format("%04d", st), String.format("%04d", ed));
+				for (Map<String, Object> rcs : rcsList) {
+					if (rcs.get("startTm") != null && rcs.get("endTm") != null) {
+						breakTimeArr.add(String.valueOf(rcs.get("startTm")));
+						breakTimeArr.add(String.valueOf(rcs.get("endTm")));
+					}
+				}
+			}
+
+			if (Integer.parseInt(String.valueOf(data.get("workMin"))) == 0) {
+				breakTimeArr = new ArrayList<>();
+				int st = Integer.parseInt(start);
+				int ed = Integer.parseInt(end);
+				if (!String.valueOf(data.get("bgngYmd")).equals(String.valueOf(data.get("crtrYmd")))) {
+					st = st + 2400;
+				}
+				if (!String.valueOf(data.get("endYmd")).equals(String.valueOf(data.get("crtrYmd")))) {
+					ed = ed + 2400;
+				}
+				List<Map<String, Object>> rcsList = getBreakTimes(String.format("%04d", st), String.format("%04d", ed));
+				for (Map<String, Object> rcs : rcsList) {
+					if (rcs.get("startTm") != null && rcs.get("endTm") != null) {
+						breakTimeArr.add(String.valueOf(rcs.get("startTm")));
+						breakTimeArr.add(String.valueOf(rcs.get("endTm")));
+					}
+				}
+			}
 
 			int allwMin = getTimediffMinute(start, end, breakTimeArr, false);
 			int nghtMin = 0;
@@ -211,6 +228,10 @@ public class OTService {
 			int pmEndTm = nghtwrkEndTime;
 			int amMin = 0;
 			int pmMin = 0;
+			String amStart = "";
+			String amEnd = "";
+			String pmStart = "";
+			String pmEnd = "";
 
 			if (nghtwrkStartTime > 2400) {
 				amStartTm = nghtwrkStartTime - 2400;
@@ -224,13 +245,31 @@ public class OTService {
 				amEndTm = 0;
 			}
 
-			start = String.format("%04d", Math.max(Math.max(comeTm, amStartTm), planStartTm >= 2400 ? planStartTm - 2400 : planStartTm));
-			end = String.format("%04d", Math.min(Math.min(endTm, amEndTm), planEndTm >= 2400 ? planEndTm - 2400 : planEndTm));
-			amMin = getTimediffMinute(start, end, breakTimeArr, false);
+			log.info("start : " + start);
+			log.info("end : " + end);
+			log.info("comeTm : " + comeTm);
+			log.info("endTm : " + endTm);
+			log.info("amStartTm : " + amStartTm);
+			log.info("amEndTm : " + amEndTm);
+			log.info("pmStartTm : " + pmStartTm);
+			log.info("pmEndTm : " + pmEndTm);
+			log.info("breakTimeArr : " + breakTimeArr);
+			log.info("planStartTm : " + planStartTm);
+			log.info("planEndTm : " + planEndTm);
+			log.info("nghtwrkStartTime : " + nghtwrkStartTime);
+			log.info("nghtwrkEndTime : " + nghtwrkEndTime);
 
-			start = String.format("%04d", Math.max(Math.max(comeTm, pmStartTm), planStartTm));
-			end = String.format("%04d", Math.min(Math.min(endTm, pmEndTm), planEndTm));
-			pmMin = getTimediffMinute(start, end, breakTimeArr, false);
+			amStart = String.format("%04d", Math.max(Math.max(comeTm, amStartTm), planStartTm >= 2400 ? planStartTm - 2400 : planStartTm));
+			amEnd = String.format("%04d", Math.min(Math.min(endTm, amEndTm), planEndTm >= 2400 ? planEndTm - 2400 : planEndTm));
+			log.info("amStart : " + amStart);
+			log.info("amEnd : " + amEnd);
+			amMin = getTimediffMinute(amStart, amEnd, breakTimeArr, false);
+
+			pmStart = String.format("%04d", Math.max(Math.max(comeTm, pmStartTm), planStartTm));
+			pmEnd = String.format("%04d", Math.min(Math.min(endTm, pmEndTm), planEndTm));
+			log.info("pmStart : " + pmStart);
+			log.info("pmEnd : " + pmEnd);
+			pmMin = getTimediffMinute(pmStart, pmEnd, breakTimeArr, false);
 
 			// if (comeTm < amEndTm && leaveTm > amStartTm) {
 			//     start = String.format("%04d", Math.max(comeTm, amStartTm), planStartTm);
@@ -249,6 +288,20 @@ public class OTService {
 			//         pmMin = getTimediffMinute(start, end, breakTimeArr, false);
 			//     }
 			// }
+
+			if ("OT".equals(String.valueOf(data.get("type")))) {
+				amStart = String.format("%04d", Math.max(Integer.parseInt(start), amStartTm));
+				amEnd = String.format("%04d", Math.min(Integer.parseInt(end), amEndTm));
+				log.info("amStart : " + amStart);
+				log.info("amEnd : " + amEnd);
+				amMin = getTimediffMinute(amStart, amEnd, breakTimeArr, false);
+
+				pmStart = String.format("%04d", Math.max(Integer.parseInt(start), pmStartTm));
+				pmEnd = String.format("%04d", Math.min(Integer.parseInt(end), pmEndTm));
+				log.info("pmStart : " + pmStart);
+				log.info("pmEnd : " + pmEnd);
+				pmMin = getTimediffMinute(pmStart, pmEnd, breakTimeArr, false);
+			}
 
 			nghtMin = amMin + pmMin;
 			// } else {
@@ -313,6 +366,49 @@ public class OTService {
 						overMin = holiMin - Integer.parseInt(String.valueOf(data.get("whrsum")));
 						holiMin = Integer.parseInt(String.valueOf(data.get("whrsum")));
 						data.put("allwHldyOvtmwrkMin", overMin);
+					}
+					data.put("allwHldyWrkMin", holiMin);
+				} else {
+					// 시작일과 종료일이 다를 경우
+					String holiStr = splitValues[1];
+					char[] holiArr = holiStr.toCharArray();
+					int sHoliMin = 0;
+					int eHoliMin = 0;
+
+					if (holiArr[0] == 'Y') {
+						start = String.format("%04d", Math.max(comeTm, planStartTm));
+						end = String.format("%04d", Math.min(endTm, 2400));
+						int holiMin = getTimediffMinute(start, end, breakTimeArr, false);
+						if (holiMin > Integer.parseInt(String.valueOf(data.get("whrsum")))) {
+							holiMin = Integer.parseInt(String.valueOf(data.get("whrsum")));
+						}
+						sHoliMin = holiMin;
+					}
+
+					if (holiArr[1] == 'Y') {
+						start = String.format("%04d", 2400);
+						end = String.format("%04d", Math.min(endTm, planEndTm));
+						int holiMin = getTimediffMinute(start, end, breakTimeArr, false);
+						if (holiMin > Integer.parseInt(String.valueOf(data.get("whrsum")))) {
+							holiMin = Integer.parseInt(String.valueOf(data.get("whrsum")));
+						}
+						eHoliMin = holiMin;
+					}
+					data.put("allwHldyWrkMin", sHoliMin + eHoliMin);
+
+				}
+			}
+
+			if ("FOT".equals(String.valueOf(data.get("type"))) && strList2.contains(String.valueOf(data.get("commGroupSeq"))) && String.valueOf(data.get("holiYn")).contains("Y")) {
+				String[] splitValues = String.valueOf(data.get("holiYn")).split("_");
+				if (splitValues[0].equals("S")) {
+					// 시작일과 종료일이 같을 경우
+					int holiMin = 0;
+					start = String.format("%04d", Math.max(comeTm, planStartTm));
+					end = String.format("%04d", Math.min(endTm, planEndTm));
+					holiMin = getTimediffMinute(start, end, breakTimeArr, false);
+					if (holiMin > Integer.parseInt(String.valueOf(data.get("whrsum")))) {
+						holiMin = Integer.parseInt(String.valueOf(data.get("whrsum")));
 					}
 					data.put("allwHldyWrkMin", holiMin);
 				} else {

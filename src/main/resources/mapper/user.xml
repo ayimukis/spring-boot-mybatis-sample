@@ -431,14 +431,14 @@
 
     <select id="getOtList" parameterType="Map" resultType="com.example.demo.sample.VoMap">
         SELECT T.*
-        , AT.COME_TM AS COME_TM
-        , AT.LEAVE_TM AS LEAVE_TM
+        , IF(T.COMM_GROUP_SEQ IN ('10', '11', '12', '13', '14', '15', '8', '16') AND T.TYPE = 'FOT', CONCAT(T.PLAN_START_DT, T.PLAN_START_TM),AT.COME_TM) AS COME_TM
+        , IF(T.COMM_GROUP_SEQ IN ('10', '11', '12', '13', '14', '15', '8', '16') AND T.TYPE = 'FOT', CONCAT(T.PLAN_END_DT, T.PLAN_END_TM),AT.LEAVE_TM) AS LEAVE_TM
         , AT.COME_ST_TM AS COME_ST_TM
         , AT.LEAVE_ST_TM AS LEAVE_ST_TM
         FROM (
         SELECT
         CASE WHEN WS.COMM_GROUP_SEQ = '16' THEN
-        CASE WHEN ('7' = WS.DAY_OF_WEEK or '1' = WS.DAY_OF_WEEK or WS.HDAY_YN = 'Y') THEN '004' ELSE '002' END
+        CASE WHEN ('1' = WS.DAY_OF_WEEK or WS.HDAY_YN = 'Y') THEN '004' ELSE '002' END
         ELSE
         '002'
         END       AS APLY_DIV
@@ -458,86 +458,84 @@
         , WS.RCS_JSON    AS RCS_JSON
         <![CDATA[
 		, CONCAT(IF(WS.START_DT != WS.END_DT, 'M','S'), '_', IF(S_HOLI.H_DAY <>'', 'Y','N'), IF(E_HOLI.H_DAY <>'', 'Y','N')) AS HOLI_YN
-		]]>
+		 ]]>
         , IFNULL(S_HOLI.H_DAY, '') AS S_H_DAY
         , IFNULL(E_HOLI.H_DAY, '') AS E_H_DAY
-        , WS. HDAY_YN
+        , WS.HDAY_YN
         , WS.COMM_GROUP_SEQ
         , WS.WHRSUM
         , WS.APLY_ALT_DYOFF_YMD
         , WS.DAY_OF_WEEK
-        FROM (
-        SELECT EMP_CAL.EMP_SEQ
-        , EMP_CAL.DATE
-        , EMP_CAL.MONTH
-        , EMP_CAL.YEAR
-        , EMP_CAL.DAY_OF_WEEK
+        , WS.OT_MIN
+        , WS.OT_HLDY_MIN
+        , WS.OT_HLDYOVR_MIN
+        , WS.OT_NGHT_MIN
+        , WS.WORK_MIN
+        FROM (SELECT EMP.EMP_SEQ
+        , CAL.DATE
+        , CAL.MONTH
+        , CAL.YEAR
+        , CAL.DAY_OF_WEEK
         <![CDATA[
-			, IF(EMP_CAL.H_DAY <> '', 'Y', 'N')              AS HDAY_YN
-			 ]]>
-        , EMP_CAL.GROUP_SEQ                              AS COMM_GROUP_SEQ
-        , EMP_CAL.WHRSUM
-        , IFNULL(WP.ALT_DYOFF_YMD, '')                   AS APLY_ALT_DYOFF_YMD
-        , WP.FOT_GOWRK_DT                                AS OT_GOWRK_DT
-        , WP.FOT_GOWRK_TM                                AS OT_GOWRK_TM
-        , WP.FOT_LVWRK_DT                                AS OT_LVWRK_DT
-        , WP.FOT_LVWRK_TM                                AS OT_LVWRK_TM
+		, IF(CAL.H_DAY <> '', 'Y', 'N')              AS HDAY_YN
+	   ]]>
+        , EMP.GROUP_SEQ                              AS COMM_GROUP_SEQ
+        , EMP.WHRSUM
+        , IFNULL(WP.ALT_DYOFF_YMD, '')               AS APLY_ALT_DYOFF_YMD
+        , WP.FOT_GOWRK_DT                            AS OT_GOWRK_DT
+        , WP.FOT_GOWRK_TM                            AS OT_GOWRK_TM
+        , WP.FOT_LVWRK_DT                            AS OT_LVWRK_DT
+        , WP.FOT_LVWRK_TM                            AS OT_LVWRK_TM
         , WP.WORK_PLAN_SEQ
-        , WP.OT_NGHT_MIN AS FOT_NGHT_MIN
-        , CASE
-        WHEN WP.WORK_PLAN_SEQ IS NOT NULL AND WP.WORK_TYPE <![CDATA[<>]]> '003' THEN WP.WORK_RCS_JSON
-        WHEN '7' = EMP_CAL.DAY_OF_WEEK OR '1' = EMP_CAL.DAY_OF_WEEK THEN '[]'
-        WHEN EMP_CAL.H_DAY IS NOT NULL THEN '[]'
-        ELSE EMP_CAL.RCS_JSON END                  AS RCS_JSON
+        , WP.OT_NGHT_MIN                             AS FOT_NGHT_MIN
+        , WP.OT_MIN
+        , WP.OT_HLDY_MIN
+        , WP.OT_HLDYOVR_MIN
+        , WP.OT_NGHT_MIN
+        , WP.WORK_RCS_JSON AS RCS_JSON
 
-        , CASE
-        WHEN WP.WORK_PLAN_SEQ IS NOT NULL
-        THEN CASE WHEN WP.WRKDY_FG_CD = 'H' THEN '' ELSE WP.GOWRK_DT END
-        ELSE CASE
-        WHEN '7' = EMP_CAL.DAY_OF_WEEK OR '1' = EMP_CAL.DAY_OF_WEEK OR
-        EMP_CAL.H_DAY IS NOT NULL THEN ''
-        WHEN EMP_CAL.H_DAY IS NOT NULL THEN ''
-        ELSE EMP_CAL.DATE END END         AS START_DT
-        , CASE
-        WHEN WP.WORK_PLAN_SEQ IS NOT NULL
-        THEN CASE WHEN WP.WRKDY_FG_CD = 'H' THEN '' ELSE WP.GOWRK_TM END
-        ELSE CASE
-        WHEN '7' = EMP_CAL.DAY_OF_WEEK OR '1' = EMP_CAL.DAY_OF_WEEK OR
-        EMP_CAL.H_DAY IS NOT NULL THEN ''
-        WHEN EMP_CAL.H_DAY IS NOT NULL THEN ''
-        ELSE EMP_CAL.CRWORKBG_TM END END  AS START_TM
-        , CASE
-        WHEN WP.WORK_PLAN_SEQ IS NOT NULL
-        THEN CASE WHEN WP.WRKDY_FG_CD = 'H' THEN '' ELSE WP.LVWRK_DT END
-        ELSE CASE
-        WHEN '7' = EMP_CAL.DAY_OF_WEEK OR '1' = EMP_CAL.DAY_OF_WEEK OR
-        EMP_CAL.H_DAY IS NOT NULL THEN ''
-        WHEN EMP_CAL.H_DAY IS NOT NULL THEN ''
-        ELSE EMP_CAL.DATE END END         AS END_DT
-        , CASE
-        WHEN WP.WORK_PLAN_SEQ IS NOT NULL
-        THEN CASE WHEN WP.WRKDY_FG_CD = 'H' THEN '' ELSE WP.LVWRK_TM END
-        ELSE CASE
-        WHEN '7' = EMP_CAL.DAY_OF_WEEK OR '1' = EMP_CAL.DAY_OF_WEEK OR
-        EMP_CAL.H_DAY IS NOT NULL THEN ''
-        WHEN EMP_CAL.H_DAY IS NOT NULL THEN ''
-        ELSE EMP_CAL.CRWORKEND_TM END END AS END_TM
+        , WP.GOWRK_DT AS START_DT
+        , WP.GOWRK_TM AS START_TM
+        , WP.LVWRK_DT AS END_DT
+        , WP.LVWRK_TM AS END_TM
         , WP.ALLW_CAL_YN
-        FROM (SELECT *
-        FROM CUSTOM.V_WORK_CALENDAR CAL
-        JOIN CUSTOM.V_WORK_EMP EMP) EMP_CAL
-        LEFT JOIN CUSTOM.V_WORK_PLAN WP ON EMP_CAL.DATE = WP.CRTR_DT AND EMP_CAL.EMP_SEQ = WP.EMP_SEQ
-        WHERE WP.WORK_PLAN_SEQ IS NOT NULL AND WP.ALLW_CAL_YN = 'N'
-        ) WS
+        <![CDATA[
+		, CASE
+		WHEN ALT.ALT_DYOFF_YMD <>'' THEN 0
+		WHEN ALT_OT.ALT_DYOFF_YMD <>'' THEN 0
+		ELSE WP.WORK_MIN END AS WORK_MIN
+		]]>
+        FROM CUSTOM.V_WORK_PLAN WP
+        JOIN CUSTOM.V_WORK_CALENDAR CAL ON WP.CRTR_DT = CAL.DATE
+        JOIN CUSTOM.V_WORK_EMP EMP ON WP.EMP_SEQ = EMP.EMP_SEQ
+        LEFT JOIN CUSTOM.TAM_WORK_PLAN ALT
+        ON WP.CRTR_DT = ALT.ALT_DYOFF_YMD AND WP.EMP_SEQ = ALT.EMP_SEQ AND ALT.DEL_YN = 'N'
+        LEFT JOIN (
+        SELECT A.CRTR_YMD, A.EMP_SEQ, A.ALT_DYOFF_YMD
+        FROM CUSTOM.TAM_OVTMWRK_APLY_DTL A
+        JOIN CUSTOM.CMMN_APRV_MNG B ON B.TBL_NM = 'TAM_OVTMWRK_APLY' AND A.OVTMWRK_APLY_SEQ = B.TBL_SEQ AND B.DEL_YN = 'N'
+        WHERE A.DEL_YN = 'N'
+        AND B.APRV_STS = '002'
+        ) ALT_OT
+        ON WP.EMP_SEQ = ALT_OT.EMP_SEQ AND WP.CRTR_DT = ALT_OT.ALT_DYOFF_YMD
+        WHERE WP.WORK_PLAN_SEQ IS NOT NULL
+        AND WP.ALLW_CAL_YN = 'N') WS
         LEFT JOIN CUSTOM.T_CO_HOLIDAY S_HOLI ON WS.START_DT = S_HOLI.H_DAY AND S_HOLI.COMP_SEQ = '0' AND S_HOLI.USE_YN = 'Y'
         LEFT JOIN CUSTOM.T_CO_HOLIDAY E_HOLI ON WS.END_DT = E_HOLI.H_DAY AND E_HOLI.COMP_SEQ = '0' AND E_HOLI.USE_YN = 'Y'
         WHERE WS.ALLW_CAL_YN = 'N'
         <![CDATA[
-	  	AND (WS.OT_GOWRK_DT <> ''
-        AND WS.OT_GOWRK_TM <> ''
-        AND WS.OT_LVWRK_DT <> ''
-        AND WS.OT_LVWRK_TM <> ''
-         OR WS.FOT_NGHT_MIN > 0)
+	  	AND (
+	  	    WS.OT_GOWRK_DT <> ''
+			AND WS.OT_GOWRK_TM <> ''
+			AND WS.OT_LVWRK_DT <> ''
+			AND WS.OT_LVWRK_TM <> ''
+         	OR
+	  	    	(
+	  	        	CONCAT(WS.END_DT, WS.END_TM) > CONCAT(WS.DATE, (SELECT NGHTWRK_START_TIME FROM CUSTOM.TAM_OVTMWRK_STNG WHERE DEL_YN = 'N' AND APLCN_YMD <= WS.DATE ORDER BY APLCN_YMD DESC LIMIT 1))
+					OR CONCAT(WS.START_DT, WS.START_TM) < CONCAT(WS.DATE, LPAD((SELECT NGHTWRK_END_TIME - 2400 FROM CUSTOM.TAM_OVTMWRK_STNG WHERE DEL_YN = 'N' AND APLCN_YMD <= WS.DATE ORDER BY APLCN_YMD DESC LIMIT 1), 4, '0'))
+					AND WS.START_DT <>'' AND WS.END_DT <> '' AND WS.START_TM <> '' AND WS.END_TM <> ''
+	  	        )
+	  	    )
 		]]>
         <if test="empSeq != null and empSeq != ''">
             AND WS.EMP_SEQ = #{empSeq}
@@ -546,9 +544,9 @@
             AND WS.DATE = #{date}
         </if>
         <if test="list != null and list.size != 0">
-            AND CONCAT(WS.EMP_SEQ, '_', WS.DATE) IN
-            <foreach collection="list" open="(" close=")" item="item" separator="," index="index">
-                CONCAT(#{item.empSeq}, '_' ,#{item.date})
+            AND
+            <foreach collection="list" open="(" close=")" item="item" separator="OR" index="index">
+                    (WS.EMP_SEQ = #{item.empSeq} AND WS.DATE = #{item.date})
             </foreach>
         </if>
         UNION ALL
@@ -560,84 +558,137 @@
         , OT.OVTMWRK_APLY_DTL_SEQ AS OVTMWRK_APLY_DTL_SEQ
         , OT.EMP_SEQ  AS EMP_SEQ
         , OT.CRTR_YMD AS CRTR_YMD
-        , WS.START_DT AS PLAN_START_DT
-        , WS.END_DT AS PLAN_END_DT
-        , WS.START_TM AS PLAN_START_TM
-        , WS.END_TM AS PLAN_END_TM
-        , OT.BGNG_TM  AS BGNG_TM
-        , OT.END_TM   AS END_TM
-        , OT.BGNG_YMD AS BGNG_YMD
-        , OT.END_YMD  AS END_YMD
-        , WS.RCS_JSON AS RCS_JSON
-        , 'N_NN' AS HOLI_YN
-        , '' AS S_H_DAY
-        , '' AS E_H_DAY
-        , WS. HDAY_YN
-        , WS.COMM_GROUP_SEQ
-        , WS.WHRSUM
-        , '' AS APLY_ALT_DYOFF_YMD
-        , WS.DAY_OF_WEEK
-        FROM (
-        SELECT *
-        FROM CUSTOM.V_OT_INFO
-        WHERE APRV_STS = '002'
-        AND ALLW_CAL_YN = 'N'
-        ) OT
-        JOIN (
-        SELECT EMP_CAL.EMP_SEQ
-        , EMP_CAL.DATE
-        , EMP_CAL.MONTH
-        , EMP_CAL.YEAR
-        , EMP_CAL.DAY_OF_WEEK
-        <![CDATA[
-			, IF(EMP_CAL.H_DAY <> '', 'Y', 'N')              AS HDAY_YN
-			]]>
-        , EMP_CAL.GROUP_SEQ                              AS COMM_GROUP_SEQ
-        , EMP_CAL.WHRSUM
-        , CASE
-        WHEN WP.WORK_PLAN_SEQ IS NOT NULL AND WP.WORK_TYPE <![CDATA[<>]]> '003' THEN WP.WORK_RCS_JSON
-        WHEN '7' = EMP_CAL.DAY_OF_WEEK OR '1' = EMP_CAL.DAY_OF_WEEK THEN '[]'
-        WHEN EMP_CAL.H_DAY IS NOT NULL THEN '[]'
-        ELSE EMP_CAL.RCS_JSON END                  AS RCS_JSON
-
         , CASE
         WHEN WP.WORK_PLAN_SEQ IS NOT NULL
         THEN CASE WHEN WP.WRKDY_FG_CD = 'H' THEN '' ELSE WP.GOWRK_DT END
         ELSE CASE
-        WHEN '7' = EMP_CAL.DAY_OF_WEEK OR '1' = EMP_CAL.DAY_OF_WEEK OR
-        EMP_CAL.H_DAY IS NOT NULL THEN ''
-        WHEN EMP_CAL.H_DAY IS NOT NULL THEN ''
-        ELSE EMP_CAL.DATE END END         AS START_DT
-        , CASE
-        WHEN WP.WORK_PLAN_SEQ IS NOT NULL
-        THEN CASE WHEN WP.WRKDY_FG_CD = 'H' THEN '' ELSE WP.GOWRK_TM END
-        ELSE CASE
-        WHEN '7' = EMP_CAL.DAY_OF_WEEK OR '1' = EMP_CAL.DAY_OF_WEEK OR
-        EMP_CAL.H_DAY IS NOT NULL THEN ''
-        WHEN EMP_CAL.H_DAY IS NOT NULL THEN ''
-        ELSE EMP_CAL.CRWORKBG_TM END END  AS START_TM
+        WHEN '7' = CAL.DAY_OF_WEEK OR '1' = CAL.DAY_OF_WEEK OR
+        CAL.H_DAY IS NOT NULL THEN ''
+        WHEN CAL.H_DAY IS NOT NULL THEN ''
+        ELSE CAL.DATE END END AS PLAN_START_DT
         , CASE
         WHEN WP.WORK_PLAN_SEQ IS NOT NULL
         THEN CASE WHEN WP.WRKDY_FG_CD = 'H' THEN '' ELSE WP.LVWRK_DT END
         ELSE CASE
-        WHEN '7' = EMP_CAL.DAY_OF_WEEK OR '1' = EMP_CAL.DAY_OF_WEEK OR
-        EMP_CAL.H_DAY IS NOT NULL THEN ''
-        WHEN EMP_CAL.H_DAY IS NOT NULL THEN ''
-        ELSE EMP_CAL.DATE END END         AS END_DT
+        WHEN '7' = CAL.DAY_OF_WEEK OR '1' = CAL.DAY_OF_WEEK OR
+        CAL.H_DAY IS NOT NULL THEN ''
+        WHEN CAL.H_DAY IS NOT NULL THEN ''
+        ELSE CAL.DATE END END AS PLAN_END_DT
+        , CASE
+        WHEN WP.WORK_PLAN_SEQ IS NOT NULL
+        THEN CASE WHEN WP.WRKDY_FG_CD = 'H' THEN '' ELSE WP.GOWRK_TM END
+        ELSE CASE
+        WHEN '7' = CAL.DAY_OF_WEEK OR '1' = CAL.DAY_OF_WEEK OR
+        CAL.H_DAY IS NOT NULL THEN ''
+        WHEN CAL.H_DAY IS NOT NULL THEN ''
+        ELSE EMP.CRWORKBG_TM END END AS PLAN_START_TM
         , CASE
         WHEN WP.WORK_PLAN_SEQ IS NOT NULL
         THEN CASE WHEN WP.WRKDY_FG_CD = 'H' THEN '' ELSE WP.LVWRK_TM END
         ELSE CASE
-        WHEN '7' = EMP_CAL.DAY_OF_WEEK OR '1' = EMP_CAL.DAY_OF_WEEK OR
-        EMP_CAL.H_DAY IS NOT NULL THEN ''
-        WHEN EMP_CAL.H_DAY IS NOT NULL THEN ''
-        ELSE EMP_CAL.CRWORKEND_TM END END AS END_TM
-        FROM (SELECT *
-        FROM CUSTOM.V_WORK_CALENDAR CAL
-        JOIN CUSTOM.V_WORK_EMP EMP) EMP_CAL
-        LEFT JOIN CUSTOM.V_WORK_PLAN WP ON EMP_CAL.DATE = WP.CRTR_DT AND EMP_CAL.EMP_SEQ = WP.EMP_SEQ
-        ) WS ON OT.EMP_SEQ = WS.EMP_SEQ AND OT.CRTR_YMD = WS.DATE
-        WHERE OT.DEL_YN = 'N'
+        WHEN '7' = CAL.DAY_OF_WEEK OR '1' = CAL.DAY_OF_WEEK OR
+        CAL.H_DAY IS NOT NULL THEN ''
+        WHEN CAL.H_DAY IS NOT NULL THEN ''
+        ELSE EMP.CRWORKEND_TM END END AS PLAN_END_TM
+        , OT.BGNG_TM  AS BGNG_TM
+        , OT.END_TM   AS END_TM
+        , OT.BGNG_YMD AS BGNG_YMD
+        , OT.END_YMD  AS END_YMD
+        <![CDATA[
+		, CASE
+		WHEN WP.WORK_PLAN_SEQ IS NOT NULL AND WP.WORK_TYPE <> '003' THEN WP.WORK_RCS_JSON
+		WHEN '7' = CAL.DAY_OF_WEEK OR '1' = CAL.DAY_OF_WEEK THEN '[]'
+		WHEN CAL.H_DAY IS NOT NULL THEN '[]'
+		ELSE EMP.RCS_JSON END AS RCS_JSON
+		]]>
+        , 'N_NN' AS HOLI_YN
+        , '' AS S_H_DAY
+        , '' AS E_H_DAY
+        <![CDATA[
+		, IF(CAL.H_DAY <> '', 'Y', 'N') AS HDAY_YN
+		]]>
+        , EMP.GROUP_SEQ AS COMM_GROUP_SEQ
+        , EMP.WHRSUM
+        , '' AS APLY_ALT_DYOFF_YMD
+        , CAL.DAY_OF_WEEK
+        , OT.APLY_OVTMWRK_MIN AS OT_MIN
+        , OT.APLY_HLDY_WRK_MIN AS OT_HLDY_MIN
+        , OT.APLY_HLDY_OVTMWRK_MIN AS OT_HLDYOVR_MIN
+        , OT.APLY_NGHT_MIN AS OT_NGHT_MIN
+        <![CDATA[
+		, CASE
+		WHEN WP.WORK_PLAN_SEQ IS NOT NULL THEN WP.WORK_MIN
+		WHEN ALT.ALT_DYOFF_YMD <>'' THEN 0
+		WHEN ALT_OT.ALT_DYOFF_YMD <>'' THEN 0
+		WHEN '7' = CAL.DAY_OF_WEEK OR '1' = CAL.DAY_OF_WEEK THEN 0
+		WHEN '7' <> CAL.DAY_OF_WEEK AND '1' <> CAL.DAY_OF_WEEK AND CAL.H_DAY IS NOT NULL
+		THEN EMP.WHRSUM
+		ELSE EMP.WHRSUM END AS WORK_MIN
+		]]>
+        FROM (SELECT A.OVTMWRK_APLY_DTL_SEQ                                         AS OVTMWRK_APLY_DTL_SEQ,
+        A.OVTMWRK_APLY_SEQ                                             AS OVTMWRK_APLY_SEQ,
+        A.OVTMWRK_MBL_APLY_SEQ                                         AS OVTMWRK_MBL_APLY_SEQ,
+        A.EMP_SEQ                                                      AS EMP_SEQ,
+        A.EMP_SEQ                                                      AS APLY_EMP_SEQ,
+        A.DEPT_SEQ                                                     AS DEPT_SEQ,
+        A.JBGD_CD                                                      AS JBGD_CD,
+        A.JBTTL_CD                                                     AS JBTTL_CD,
+        A.APLY_DIV                                                     AS APLY_DIV,
+        A.CMPN_DIV                                                     AS CMPN_DIV,
+        A.ALT_DYOFF_YMD                                                AS ALT_DYOFF_YMD,
+        A.WORK_PLAN_SEQ                                                AS WORK_PLAN_SEQ,
+        A.CRTR_YMD                                                     AS CRTR_YMD,
+        A.BGNG_YMD                                                     AS BGNG_YMD,
+        A.BGNG_TM                                                      AS BGNG_TM,
+        A.END_YMD                                                      AS END_YMD,
+        A.END_TM                                                       AS END_TM,
+        A.APLY_REST_MIN                                                AS APLY_REST_MIN,
+        A.APLY_HLDY_OVTMWRK_MIN                                        AS APLY_HLDY_OVTMWRK_MIN,
+        A.APLY_NGHT_MIN                                                AS APLY_NGHT_MIN,
+        A.REASON                                                       AS REASON,
+        A.GTWK_TM                                                      AS GTWK_TM,
+        A.LVWK_TM                                                      AS LVWK_TM,
+        A.ALLW_REST_MIN                                                AS ALLW_REST_MIN,
+        A.ALLW_HLDY_OVTMWRK_MIN                                        AS ALLW_HLDY_OVTMWRK_MIN,
+        A.ALLW_NGHT_MIN                                                AS ALLW_NGHT_MIN,
+        A.ALLW_DAYHLDY_WRK_MIN                                         AS ALLW_DAYHLDY_WRK_MIN,
+        A.CMPN_VCT_END_YMD                                             AS CMPN_VCT_END_YMD,
+        A.CMPN_VCT_END_YN                                              AS CMPN_VCT_END_YN,
+        A.ALLW_CAL_YN                                                  AS ALLW_CAL_YN,
+        A.DEL_YN                                                       AS DEL_YN,
+        A.RGTR_SEQ                                                     AS RGTR_SEQ,
+        A.REG_YMD                                                      AS REG_YMD,
+        A.MDF_SEQ                                                      AS MDF_SEQ,
+        A.MDF_YMD                                                      AS MDF_YMD,
+        IFNULL(A.APLY_OVTMWRK_MIN, 0)                                  AS APLY_OVTMWRK_MIN,
+        IFNULL(A.APLY_HLDY_WRK_MIN, 0)                                 AS APLY_HLDY_WRK_MIN,
+        IFNULL(A.APLY_OVTMWRK_MIN, 0) + IFNULL(A.APLY_HLDY_WRK_MIN, 0) AS APLY_WRK_MIN,
+        IFNULL(A.ALLW_OVTMWRK_MIN, 0)                                  AS ALLW_OVTMWRK_MIN,
+        IFNULL(A.ALLW_HLDY_WRK_MIN, 0)                                 AS ALLW_HLDY_WRK_MIN,
+        IFNULL(A.ALLW_OVTMWRK_MIN, 0) + IFNULL(A.ALLW_HLDY_WRK_MIN, 0) AS ALLW_WRK_MIN,
+        IFNULL(B.APRV_STS, '000')                                      AS APRV_STS
+        FROM CUSTOM.TAM_OVTMWRK_APLY_DTL A
+        JOIN CUSTOM.CMMN_APRV_MNG B
+        ON B.TBL_NM = 'TAM_OVTMWRK_APLY' AND A.OVTMWRK_APLY_SEQ = B.TBL_SEQ AND B.DEL_YN = 'N'
+        WHERE A.DEL_YN = 'N'
+        AND B.APRV_STS = '002'
+        AND A.ALLW_CAL_YN = 'N'
+        ) OT
+        JOIN CUSTOM.V_WORK_CALENDAR CAL ON OT.CRTR_YMD = CAL.DATE
+        JOIN CUSTOM.V_WORK_EMP EMP ON OT.EMP_SEQ = EMP.EMP_SEQ
+        LEFT JOIN CUSTOM.V_WORK_PLAN WP
+        ON OT.CRTR_YMD = WP.CRTR_DT AND OT.EMP_SEQ = WP.EMP_SEQ
+        LEFT JOIN CUSTOM.TAM_WORK_PLAN ALT
+        ON OT.CRTR_YMD = ALT.ALT_DYOFF_YMD AND OT.EMP_SEQ = ALT.EMP_SEQ AND ALT.DEL_YN = 'N'
+        LEFT JOIN (
+        SELECT A.CRTR_YMD, A.EMP_SEQ, A.ALT_DYOFF_YMD
+        FROM CUSTOM.TAM_OVTMWRK_APLY_DTL A
+        JOIN CUSTOM.CMMN_APRV_MNG B ON B.TBL_NM = 'TAM_OVTMWRK_APLY' AND A.OVTMWRK_APLY_SEQ = B.TBL_SEQ AND B.DEL_YN = 'N'
+        WHERE A.DEL_YN = 'N'
+        AND B.APRV_STS = '002'
+        ) ALT_OT
+        ON OT.EMP_SEQ = ALT_OT.EMP_SEQ AND OT.CRTR_YMD = ALT_OT.ALT_DYOFF_YMD
+        WHERE 1=1
         <if test="empSeq != null and empSeq != ''">
             AND OT.EMP_SEQ = #{empSeq}
         </if>
@@ -645,17 +696,18 @@
             AND OT.CRTR_YMD = #{date}
         </if>
         <if test="list != null and list.size != 0">
-            AND CONCAT(OT.EMP_SEQ, '_', OT.CRTR_YMD) IN
-            <foreach collection="list" open="(" close=")" item="item" separator="," index="index">
-                CONCAT(#{item.empSeq}, '_' ,#{item.date})
+            AND
+            <foreach collection="list" open="(" close=")" item="item" separator="OR" index="index">
+                    (OT.EMP_SEQ = #{item.empSeq} AND OT.CRTR_YMD = #{item.date})
             </foreach>
         </if>
-        ) T JOIN CUSTOM.TAM_AT_ATT AT ON T.EMP_SEQ = AT.EMP_SEQ AND T.CRTR_YMD = AT.CRTR_YMD
-        WHERE AT.DEL_YN = 'N'
-        AND T.CMPN_DIV != '003'
+        ) T LEFT JOIN CUSTOM.TAM_AT_ATT AT ON T.EMP_SEQ = AT.EMP_SEQ AND T.CRTR_YMD = AT.CRTR_YMD AND AT.DEL_YN = 'N'
+        WHERE T.CMPN_DIV != '003'
         <![CDATA[
-	  	AND AT.COME_TM <> ''
-		AND AT.LEAVE_TM <> ''
+	  	AND (AT.COME_TM <> ''
+           AND AT.LEAVE_TM <> ''
+               OR (T.COMM_GROUP_SEQ IN ('10', '11', '12', '13', '14', '15', '8', '16') AND T.TYPE = 'FOT')
+               )
 		]]>
     </select>
 

@@ -243,11 +243,11 @@ public class UserService {
 
             int nghtMin = amMin + pmMin;
 
-            if (Integer.parseInt(String.valueOf(data.get("allwOtNghtMin"))) != nghtMin) {
-                System.out.println("NIGHT : " + String.valueOf(data.get("workPlanSeq")) + " / " +String.valueOf(data.get("crtrDt")) + " / " + String.valueOf(data.get("empNm")) + " / " + String.valueOf(data.get("workMin")) + " != " + workMin);
-                regSet.add(String.valueOf(data.get("workPlanSeq")));
-                checkList.add(data);
-            }
+            // if (Integer.parseInt(String.valueOf(data.get("allwOtNghtMin"))) != nghtMin) {
+            //     System.out.println("NIGHT : " + String.valueOf(data.get("workPlanSeq")) + " / " +String.valueOf(data.get("crtrDt")) + " / " + String.valueOf(data.get("empNm")) + " / " + String.valueOf(data.get("workMin")) + " != " + workMin);
+            //     regSet.add(String.valueOf(data.get("workPlanSeq")));
+            //     checkList.add(data);
+            // }
 
             if (data.get("fotGowrkTm") != null && !"".equals(String.valueOf(data.get("fotGowrkTm")))) {
                 String otStartDt = String.valueOf(data.get("fotGowrkDt"));
@@ -264,8 +264,11 @@ public class UserService {
                     otEndTm = Integer.parseInt(otLvwrkTm) + 2400 + "";
                 }
 
+                String otStr = data.get("otMin") == null ? "0" : String.valueOf(data.get("otMin"));
+                String otHldyStr = data.get("otHldyMin") == null ? "0" : String.valueOf(data.get("otHldyMin"));
+
                 int otMin = getTimediffMinute(otStartTm, otEndTm, breakTimeArr, false);
-                int beforeOtMin = Integer.parseInt(String.valueOf(data.get("otMin"))) + Integer.parseInt(String.valueOf(data.get("otHldyMin")));
+                int beforeOtMin = Integer.parseInt(otStr) + Integer.parseInt(otHldyStr);
 
                 if (beforeOtMin != otMin) {
                     System.out.println("OT : " + String.valueOf(data.get("workPlanSeq")) + " / " +String.valueOf(data.get("crtrDt")) + " / " + String.valueOf(data.get("empNm")) + " / " + beforeOtMin + " != " + otMin);
